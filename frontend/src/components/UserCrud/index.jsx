@@ -19,8 +19,15 @@ const initialState = {
 
 function UserCrud(props) {
   
-  const [state, setState] = useState({...initialState})
-
+  const [state, setState] = useState(initialState)
+  
+  function componentWillMount(){
+    axios(baseUrl).then(resp => {
+      setState({list: resp.data})
+    })
+  }
+  componentWillMount()
+  
   function clear() {
     setState({user: initialState.user})
   }
@@ -36,16 +43,16 @@ function UserCrud(props) {
       })
   }
 
-  function getUpdatedList(user){
+  function getUpdatedList(user, add = true){
     const list = state.list.filter(u => u.id !== user.id)
-    list.unshift(user)
+    if (add) list.unshift(user)
     return list
   }
 
   function updateField(event){
     const user = {...state.user}
     user[event.target.name] = event.target.value
-    setState({ user })
+    setState({ user: user })
   }
 
   function renderForm(){
@@ -92,9 +99,65 @@ function UserCrud(props) {
     )
   }
 
-  return <Main {...headerProps}>
+  function load(user){
+    setState({ user: user })
+  }
+
+  function remove(user){
+    axios.delete(`${baseUrl}/${user.id}`).then(resp =>{
+      const list = getUpdatedList(user, false)
+      setState({ list: list })
+    })
+  }
+
+  function renderTable(){
+    return(
+      <table className="table mt-4">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {renderRows()}
+        </tbody>
+      </table>
+    )
+  }
+
+  function renderRows(){
+    return(state.list.map(user =>{
+      return(
+        <tr key={user.id}>
+          <td>{user.id}</td>
+          <td>{user.name}</td>
+          <td>{user.email}</td>
+          <td>
+            <button className="btn btn-warnig"
+              onClick={() => load(user)}>
+              <i className="fa fa-pencil"></i>
+            </button>
+            <button className="btn btn-danger ml2"
+              onClick={() => remove(user)}>
+              <i className="fa fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      )
+    }))
+  }
+
+  console.log(state)
+
+  return( 
+    <Main {...headerProps}>
       {renderForm()}
-  </Main>;
+      {renderTable()}
+    </Main>
+  );
 }
 
 export default UserCrud;
