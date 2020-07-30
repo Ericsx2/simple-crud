@@ -151,7 +151,7 @@ function UserCrud(props) {
       )
     }))
   }
-  componentWillMount()
+
   return( 
     <Main {...headerProps}>
       {renderForm()}
