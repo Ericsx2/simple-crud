@@ -19,17 +19,19 @@ const initialState = {
 
 function UserCrud(props) {
   
-  const [state, setState] = useState(initialState)
+  const [state, setState] = useState({...initialState})
   
   function componentWillMount(){
+    const user = state.user
     axios(baseUrl).then(resp => {
-      setState({list: resp.data})
+      setState({ list: resp.data})
+      
     })
+    setState({...state, user})
   }
-  componentWillMount()
   
   function clear() {
-    setState({user: initialState.user})
+    setState({...state, user: initialState.user})
   }
 
   function save() {
@@ -39,7 +41,7 @@ function UserCrud(props) {
     axios[method](url, user)
       .then(resp => {
         const list = getUpdatedList(resp.data)
-        setState({user: initialState.user, list})
+        setState({...state, list})
       })
   }
 
@@ -52,7 +54,7 @@ function UserCrud(props) {
   function updateField(event){
     const user = {...state.user}
     user[event.target.name] = event.target.value
-    setState({ user: user })
+    setState({...state, user: user })
   }
 
   function renderForm(){
@@ -100,13 +102,13 @@ function UserCrud(props) {
   }
 
   function load(user){
-    setState({ user: user })
+    setState({...state,  user: user })
   }
 
   function remove(user){
     axios.delete(`${baseUrl}/${user.id}`).then(resp =>{
       const list = getUpdatedList(user, false)
-      setState({ list: list })
+      setState({...state,  list: list })
     })
   }
 
@@ -136,7 +138,7 @@ function UserCrud(props) {
           <td>{user.name}</td>
           <td>{user.email}</td>
           <td>
-            <button className="btn btn-warnig"
+            <button className="btn btn-warning"
               onClick={() => load(user)}>
               <i className="fa fa-pencil"></i>
             </button>
@@ -149,9 +151,7 @@ function UserCrud(props) {
       )
     }))
   }
-
-  console.log(state)
-
+  componentWillMount()
   return( 
     <Main {...headerProps}>
       {renderForm()}
