@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
 import Main from '../Main'
 
-// import { Container } from './styles';
 
 const headerProps ={
     icon: 'user',
@@ -12,49 +11,52 @@ const headerProps ={
 }
 
 const baseUrl = 'http://localhost:3001/users'
-const initialState = {
-  user: { name: '', email: ''},
-  list: []
-}
+const initialUser = {name: '', email: ''} 
+const initialList = []
 
-function UserCrud(props) {
+function UserCrud() {
   
-  const [state, setState] = useState({...initialState})
+  const [user, setUser] = useState(initialUser)
+  const [list, setList] = useState(initialList)
   
-  function componentWillMount(){
-    const user = state.user
-    axios(baseUrl).then(resp => {
-      setState({ list: resp.data})
-      
-    })
-    setState({...state, user})
-  }
+  useEffect(() => {
+    async function loadList(){
+      axios(baseUrl).then(resp => {
+        const newList = resp.data
+        setList(newList)
+      })
+    }
+
+    loadList()
+  }, [])
   
+
   function clear() {
-    setState({...state, user: initialState.user})
+    setUser(initialUser)
   }
 
   function save() {
-    const user = state.user
-    const method = user.id ? 'put' : 'post'
-    const url = user.id ? `${baseUrl}/${user.id}` : baseUrl
-    axios[method](url, user)
+    const newUser = user
+    const method = newUser.id ? 'put' : 'post'
+    const url = newUser.id ? `${baseUrl}/${newUser.id}` : baseUrl
+    axios[method](url, newUser)
       .then(resp => {
-        const list = getUpdatedList(resp.data)
-        setState({...state, list})
+        const newList = getUpdatedList(resp.data)
+        setList(newList)
       })
+    clear()
   }
 
   function getUpdatedList(user, add = true){
-    const list = state.list.filter(u => u.id !== user.id)
-    if (add) list.unshift(user)
-    return list
+    const newList = list.filter(u => u.id !== user.id)
+    if (add) newList.unshift(user)
+    return newList
   }
 
   function updateField(event){
-    const user = {...state.user}
-    user[event.target.name] = event.target.value
-    setState({...state, user: user })
+    const newUser = {...user}
+    newUser[event.target.name] = event.target.value
+    setUser({...newUser})
   }
 
   function renderForm(){
@@ -65,7 +67,7 @@ function UserCrud(props) {
             <div className="form-group">
               <label>Nome</label>
               <input type="text" name="name" className="form-control"
-                value={state.user.name}
+                value={user.name}
                 onChange={e => updateField(e)}
                 placeholder="Digite o nome ..."
               />
@@ -76,7 +78,7 @@ function UserCrud(props) {
             <div className="form-group">
               <label>Email</label>
               <input type="text" name="email" className="form-control"
-                value={state.user.email}
+                value={user.email}
                 onChange={e => updateField(e)}
                 placeholder="Digite o email ..."
               />
@@ -102,13 +104,13 @@ function UserCrud(props) {
   }
 
   function load(user){
-    setState({...state,  user: user })
+    setUser(user)
   }
 
   function remove(user){
     axios.delete(`${baseUrl}/${user.id}`).then(resp =>{
-      const list = getUpdatedList(user, false)
-      setState({...state,  list: list })
+      const newList = getUpdatedList(user, false)
+      setList(newList)
     })
   }
 
@@ -131,7 +133,7 @@ function UserCrud(props) {
   }
 
   function renderRows(){
-    return(state.list.map(user =>{
+    return(list.map(user =>{
       return(
         <tr key={user.id}>
           <td>{user.id}</td>
@@ -156,6 +158,7 @@ function UserCrud(props) {
     <Main {...headerProps}>
       {renderForm()}
       {renderTable()}
+      {console.log(list)}
     </Main>
   );
 }
